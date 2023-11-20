@@ -69,6 +69,17 @@ class NetAppMetrics(base_driver.Metrics):
         self.gauge_san_cluster_block_other_byte_rate = Gauge('san_cluster_number_other_by_rate',
                                                              'Cluster Other Throughput - KiB/s',
                                                              cluster_labels, registry=self.registry)
+        #Hieu
+        self.gauge_san_total_capacity_mib = Gauge('san_totalCapacityMiB', 'Total system capacity in MiB',
+                                                  cluster_labels, registry=self.registry)
+        
+        self.gauge_san_allocated_capacity_mib = Gauge('san_allocatedCapacityMiB',
+                                                      'Total allocated capacity in MiB',
+                                                      cluster_labels, registry=self.registry)
+
+        self.gauge_san_free_capacity_mib = Gauge('san_freeCapacityMiB', 'Total free capacity in MiB',
+                                                 cluster_labels, registry=self.registry)
+        
 
     def parse_cluster_metric(self, cluster):
         read_iops = cluster['read_iops']
@@ -80,6 +91,10 @@ class NetAppMetrics(base_driver.Metrics):
         read_throughput = cluster['read_throughput']
         write_throughput = cluster['write_throughput']
         other_throughput = cluster['other_throughput']
+        #Hieu
+        total_capacity = cluster['total_capacity']
+        allocated_capacity = cluster['allocated_capacity']
+        free_capacity = cluster['free_capacity']
 
         self.gauge_san_cluster_block_read_iops.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
                                                       san_ip=cluster['san_ip']).set(read_iops)
@@ -101,6 +116,15 @@ class NetAppMetrics(base_driver.Metrics):
         self.gauge_san_cluster_block_other_byte_rate.labels(backend_name=self.backend_name,
                                                             cluster_name=cluster['name'],
                                                             san_ip=cluster['san_ip']).set(other_throughput / 1024)
+        #Hieu
+        self.gauge_san_total_capacity_mib.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
+                                                 san_ip=cluster['san_ip']).set(total_capacity / 1024 / 1024)
+        
+        self.gauge_san_allocated_capacity_mib.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
+                                                 san_ip=cluster['san_ip']).set(allocated_capacity / 1024 / 1024)
+        
+        self.gauge_san_free_capacity_mib.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
+                                                 san_ip=cluster['san_ip']).set(free_capacity / 1024 / 1024)
 
     def define_pool_info_metrics(self):
         pool_labels = ["backend_name", "san_ip", "pool_name"]
