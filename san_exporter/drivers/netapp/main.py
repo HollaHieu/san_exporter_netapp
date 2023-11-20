@@ -54,7 +54,7 @@ class NetAppExporter(base_driver.ExporterDriver):
                           'read_throughput': response['metric']['throughput']['read'],
                           'write_throughput': response['metric']['throughput']['write'],
                           'other_throughput': response['metric']['throughput']['other'],
-                          'status': response['metric']['status']
+                          'status': response['metric']['status'],
                           'total_capacity': response_storage_cluster['block_storage']['medias'][1]['size'],             #Hieu
                           'allocated_capacity': response_storage_cluster['block_storage']['medias'][1]['used'],
                           'free_capacity': response_storage_cluster['block_storage']['medias'][1]['available']
