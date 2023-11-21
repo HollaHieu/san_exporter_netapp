@@ -79,7 +79,12 @@ class NetAppMetrics(base_driver.Metrics):
 
         self.gauge_san_free_capacity_mib = Gauge('san_freeCapacityMiB', 'Total free capacity in MiB',
                                                  cluster_labels, registry=self.registry)
+
+        self.gauge_san_cpu_total_01 = Gauge('san_cpu_total_01', 'The cpus spent for controller 01',
+                                         cluster_labels, registry=self.registry)
         
+        self.gauge_san_cpu_total_02 = Gauge('san_cpu_total_02', 'The cpus spent for controller 02',
+                                         cluster_labels, registry=self.registry)
 
     def parse_cluster_metric(self, cluster):
         read_iops = cluster['read_iops']
@@ -95,6 +100,8 @@ class NetAppMetrics(base_driver.Metrics):
         total_capacity = cluster['total_capacity']
         allocated_capacity = cluster['allocated_capacity']
         free_capacity = cluster['free_capacity']
+        cpu_total_01 = cluster['cpu_total_01']
+        cpu_total_02 = cluster['cpu_total_02']
 
         self.gauge_san_cluster_block_read_iops.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
                                                       san_ip=cluster['san_ip']).set(read_iops)
@@ -125,6 +132,12 @@ class NetAppMetrics(base_driver.Metrics):
         
         self.gauge_san_free_capacity_mib.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
                                                  san_ip=cluster['san_ip']).set(free_capacity / 1024 / 1024)
+
+        self.gauge_san_cpu_total_01.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
+                                                 san_ip=cluster['san_ip']).set(cpu_total_01)
+
+        self.gauge_san_cpu_total_02.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
+                                                 san_ip=cluster['san_ip']).set(cpu_total_02)
 
     def define_pool_info_metrics(self):
         pool_labels = ["backend_name", "san_ip", "pool_name"]
