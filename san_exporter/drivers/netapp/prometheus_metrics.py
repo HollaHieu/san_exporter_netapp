@@ -141,12 +141,15 @@ class NetAppMetrics(base_driver.Metrics):
 
     def define_pool_info_metrics(self):
         pool_labels = ["backend_name", "san_ip", "pool_name"]
+        #Hieu
+        volume_labels = ["backend_name", "san_ip", "volume_name"]
         self.gauge_san_pool_total_capacity = Gauge('san_pool_total_capacity_mib',
-                                                   'Total capacity of pool in MiB', pool_labels, registry=self.registry)
+                                                   'Total capacity of pool in MiB', volume_labels, registry=self.registry)
         self.gauge_san_pool_used_capacity = Gauge('san_pool_used_capacity_mib',
-                                                  'Used capacity of pool in MiB', pool_labels, registry=self.registry)
+                                                  'Used capacity of pool in MiB', volume_labels, registry=self.registry)
         self.gauge_san_pool_free_capacity = Gauge('san_pool_free_capacity_mib',
-                                                  'Free capacity of pool in MiB', pool_labels, registry=self.registry)
+                                                  'Free capacity of pool in MiB', volume_labels, registry=self.registry)
+
         self.gauge_san_pool_block_read_iops = Gauge('san_pool_number_read_io', 'Pool Read IOPS',
                                                     pool_labels, registry=self.registry)
         self.gauge_san_pool_block_write_iops = Gauge('san_pool_number_write_io', 'Pool Write IOPS',
@@ -180,11 +183,17 @@ class NetAppMetrics(base_driver.Metrics):
         read_throughput = pool_info['read_throughput']
         write_throughput = pool_info['write_throughput']
         other_throughput = pool_info['other_throughput']
+        #Hieu
+        free_capacity = pool_info['size_free']
 
-        self.gauge_san_pool_total_capacity.labels(backend_name=self.backend_name, pool_name=pool_info['name'],
+        self.gauge_san_pool_total_capacity.labels(backend_name=self.backend_name, volume_name=pool_info['name'],
                                                   san_ip=pool_info['san_ip']).set(total_capacity / 1024 / 1024)
-        self.gauge_san_pool_used_capacity.labels(backend_name=self.backend_name, pool_name=pool_info['name'],
+        self.gauge_san_pool_used_capacity.labels(backend_name=self.backend_name, volume_name=pool_info['name'],
                                                  san_ip=pool_info['san_ip']).set(used_capacity / 1024 / 1024)
+        #Hieu
+        self.gauge_san_pool_free_capacity.labels(backend_name=self.backend_name, volume_name=pool_info['name'],
+                                                 san_ip=pool_info['san_ip']).set(free_capacity / 1024 / 1024)
+
         self.gauge_san_pool_block_read_iops.labels(backend_name=self.backend_name, pool_name=pool_info['name'],
                                                    san_ip=pool_info['san_ip']).set(read_iops)
         self.gauge_san_pool_block_write_iops.labels(backend_name=self.backend_name, pool_name=pool_info['name'],
