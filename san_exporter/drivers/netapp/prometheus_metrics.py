@@ -185,12 +185,14 @@ class NetAppMetrics(base_driver.Metrics):
                                                      pool_labels, registry=self.registry)
         self.gauge_san_pool_block_other_iops = Gauge('san_pool_number_other_io', 'Pool Other IOPS',
                                                      pool_labels, registry=self.registry)
+
         self.gauge_san_pool_block_read_latency = Gauge('san_pool_number_read_latency', 'Pool Read Latency',
                                                        pool_labels, registry=self.registry)
         self.gauge_san_pool_block_write_latency = Gauge('san_pool_number_write_latency', 'Pool Write Latency',
                                                         pool_labels, registry=self.registry)
         self.gauge_san_pool_block_other_latency = Gauge('san_pool_number_other_latency', 'Pool Other Latency',
                                                         pool_labels, registry=self.registry)
+                                                        
         self.gauge_san_pool_block_read_byte_rate = Gauge('san_pool_number_read_by_rate', 'Pool Read Throughput - KiB/s',
                                                          pool_labels, registry=self.registry)
         self.gauge_san_pool_block_write_byte_rate = Gauge('san_pool_number_write_byte_rate',
