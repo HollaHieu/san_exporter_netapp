@@ -96,6 +96,9 @@ class NetAppMetrics(base_driver.Metrics):
         self.gauge_hdd_free_capacity_mib = Gauge('hdd_freeCapacityMiB', 'Total free capacity in MiB',
                                                  cluster_labels, registry=self.registry)
 
+        self.gauge_total_lun = Gauge('total_lun', 'Total LUN records number for FAS8300-PV01-SVM',
+                                         cluster_labels, registry=self.registry)
+
     def parse_cluster_metric(self, cluster):
         read_iops = cluster['read_iops']
         write_iops = cluster['write_iops']
@@ -115,6 +118,7 @@ class NetAppMetrics(base_driver.Metrics):
         hdd_total = cluster['hdd_total']
         hdd_allocated = cluster['hdd_allocated']
         hdd_free = cluster['hdd_free']
+        total_lun = cluster['total_lun']
 
         self.gauge_san_cluster_block_read_iops.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
                                                       san_ip=cluster['san_ip']).set(read_iops)
@@ -160,6 +164,9 @@ class NetAppMetrics(base_driver.Metrics):
         
         self.gauge_hdd_free_capacity_mib.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
                                                  san_ip=cluster['san_ip']).set(hdd_free / 1024 / 1024)
+
+        self.gauge_total_lun.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
+                                                 san_ip=cluster['san_ip']).set(total_lun)
 
     def define_pool_info_metrics(self):
         pool_labels = ["backend_name", "san_ip", "pool_name"]

@@ -44,6 +44,10 @@ class NetAppExporter(base_driver.ExporterDriver):
         response_cpu_utilization = requests.get('https://' + self.netapp_api_ip + '/api/cluster/nodes?fields=name%2Cmodel%2Cha%2Cserial_number%2Cstate%2Cmanagement_interfaces%2Cuptime%2Cservice_processor%2Cvendor_serial_number%2Csystem_machine_type%2Csystem_id%2Cversion%2Cmembership%2Cis_all_flash_optimized%2Cstatistics%2Cmetric',
                                 headers=self.headers, auth=self.auth,
                                 verify=False).json()
+
+        response_lun = requests.get('https://' + self.netapp_api_ip + '/api/storage/luns?return_records=false&status.container_state=online',
+                                headers=self.headers, auth=self.auth,
+                                verify=False).json()
         #Hieu
         cluster_data = []
         response = requests.get('https://' + self.netapp_api_ip + '/api/cluster', headers=self.headers, auth=self.auth,
@@ -66,7 +70,8 @@ class NetAppExporter(base_driver.ExporterDriver):
                           'cpu_total_01':  response_cpu_utilization['records'][1]['metric']['processor_utilization'],
                           'hdd_total': response_storage_cluster['block_storage']['medias'][0]['size'],
                           'hdd_allocated': response_storage_cluster['block_storage']['medias'][0]['used'],
-                          'hdd_free': response_storage_cluster['block_storage']['medias'][0]['available']
+                          'hdd_free': response_storage_cluster['block_storage']['medias'][0]['available'],
+                          'total_lun': response_lun['num_records']
                           }
         cluster_metric.update({'san_ip': self.netapp_api_ip})
         cluster_data.append(cluster_metric)
