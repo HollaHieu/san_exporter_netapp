@@ -86,6 +86,16 @@ class NetAppMetrics(base_driver.Metrics):
         self.gauge_san_cpu_total_02 = Gauge('san_cpu_total_02', 'The cpus spent for controller 02',
                                          cluster_labels, registry=self.registry)
 
+        self.gauge_hdd_total_capacity_mib = Gauge('hdd_totalCapacityMiB', 'Total system capacity in MiB',
+                                                  cluster_labels, registry=self.registry)
+        
+        self.gauge_hdd_allocated_capacity_mib = Gauge('hdd_allocatedCapacityMiB',
+                                                      'Total allocated capacity in MiB',
+                                                      cluster_labels, registry=self.registry)
+
+        self.gauge_hdd_free_capacity_mib = Gauge('hdd_freeCapacityMiB', 'Total free capacity in MiB',
+                                                 cluster_labels, registry=self.registry)
+
     def parse_cluster_metric(self, cluster):
         read_iops = cluster['read_iops']
         write_iops = cluster['write_iops']
@@ -102,6 +112,9 @@ class NetAppMetrics(base_driver.Metrics):
         free_capacity = cluster['free_capacity']
         cpu_total_01 = cluster['cpu_total_01']
         cpu_total_02 = cluster['cpu_total_02']
+        hdd_total = cluster['hdd_total']
+        hdd_allocated = cluster['hdd_allocated']
+        hdd_free = cluster['hdd_free']
 
         self.gauge_san_cluster_block_read_iops.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
                                                       san_ip=cluster['san_ip']).set(read_iops)
@@ -138,6 +151,15 @@ class NetAppMetrics(base_driver.Metrics):
 
         self.gauge_san_cpu_total_02.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
                                                  san_ip=cluster['san_ip']).set(cpu_total_02)
+
+        self.gauge_hdd_total_capacity_mib.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
+                                                 san_ip=cluster['san_ip']).set(hdd_total / 1024 / 1024)
+        
+        self.gauge_hdd_allocated_capacity_mib.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
+                                                 san_ip=cluster['san_ip']).set(hdd_allocated / 1024 / 1024)
+        
+        self.gauge_hdd_free_capacity_mib.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
+                                                 san_ip=cluster['san_ip']).set(hdd_free / 1024 / 1024)
 
     def define_pool_info_metrics(self):
         pool_labels = ["backend_name", "san_ip", "pool_name"]

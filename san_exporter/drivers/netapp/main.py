@@ -63,7 +63,10 @@ class NetAppExporter(base_driver.ExporterDriver):
                           'allocated_capacity': response_storage_cluster['block_storage']['medias'][1]['used'],
                           'free_capacity': response_storage_cluster['block_storage']['medias'][1]['available'],
                           'cpu_total_02': response_cpu_utilization['records'][0]['metric']['processor_utilization'],
-                          'cpu_total_01':  response_cpu_utilization['records'][1]['metric']['processor_utilization']
+                          'cpu_total_01':  response_cpu_utilization['records'][1]['metric']['processor_utilization'],
+                          'hdd_total': response_storage_cluster['block_storage']['medias'][0]['size'],
+                          'hdd_allocated': response_storage_cluster['block_storage']['medias'][0]['used'],
+                          'hdd_free': response_storage_cluster['block_storage']['medias'][0]['available']
                           }
         cluster_metric.update({'san_ip': self.netapp_api_ip})
         cluster_data.append(cluster_metric)
