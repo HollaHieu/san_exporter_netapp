@@ -37,6 +37,9 @@ class NetAppExporter(base_driver.ExporterDriver):
 
     def get_cluster_metrics(self):
         #Hieu 
+        hdd = False
+        ssd = False
+
         response_storage_cluster = requests.get('https://' + self.netapp_api_ip + '/api/storage/cluster?fields=efficiency%2Cblock_storage%2Ccloud_storage%2Cefficiency_without_snapshots%2Cefficiency_without_snapshots_flexclones',
                                 headers=self.headers, auth=self.auth,
                                 verify=False).json()
@@ -72,10 +75,22 @@ class NetAppExporter(base_driver.ExporterDriver):
                 cluster_metric['hdd_total'] = entry['size']
                 cluster_metric['hdd_allocated'] = entry['used']
                 cluster_metric['hdd_free'] = entry['available']
+                hdd = True
             elif entry['type'] == 'ssd':
                 cluster_metric['total_capacity'] = entry['size']
                 cluster_metric['allocated_capacity'] = entry['used']
                 cluster_metric['free_capacity'] = entry['available']
+                ssd = True
+
+        if hdd == False:                                                               # Default hdd, ssd -> 0
+            cluster_metric['hdd_total'] = 0
+            cluster_metric['hdd_allocated'] = 0
+            cluster_metric['hdd_free'] = 0
+
+        if ssd == False:
+            cluster_metric['total_capacity'] = 0
+            cluster_metric['allocated_capacity'] = 0
+            cluster_metric['free_capacity'] = 0
 
         for entry in response_cpu_utilization['records']:
             e_name = entry['name']
