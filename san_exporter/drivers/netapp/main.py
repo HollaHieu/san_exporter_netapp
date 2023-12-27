@@ -52,6 +52,7 @@ class NetAppExporter(base_driver.ExporterDriver):
         cluster_data = []
         response = requests.get('https://' + self.netapp_api_ip + '/api/cluster', headers=self.headers, auth=self.auth,
                                 verify=False).json()
+
         cluster_metric = {'name': response['name'], 'version': response['version']['full'],
                           'read_iops': response['metric']['iops']['read'],
                           'write_iops': response['metric']['iops']['write'],
@@ -63,16 +64,28 @@ class NetAppExporter(base_driver.ExporterDriver):
                           'write_throughput': response['metric']['throughput']['write'],
                           'other_throughput': response['metric']['throughput']['other'],
                           'status': response['metric']['status'],
-                          'total_capacity': response_storage_cluster['block_storage']['medias'][1]['size'],             #Hieu
-                          'allocated_capacity': response_storage_cluster['block_storage']['medias'][1]['used'],
-                          'free_capacity': response_storage_cluster['block_storage']['medias'][1]['available'],
-                          'cpu_total_02': response_cpu_utilization['records'][0]['metric']['processor_utilization'],
-                          'cpu_total_01':  response_cpu_utilization['records'][1]['metric']['processor_utilization'],
-                          'hdd_total': response_storage_cluster['block_storage']['medias'][0]['size'],
-                          'hdd_allocated': response_storage_cluster['block_storage']['medias'][0]['used'],
-                          'hdd_free': response_storage_cluster['block_storage']['medias'][0]['available'],
                           'total_lun': response_lun['num_records']
                           }
+
+        for entry in response_storage_cluster['block_storage']['medias']:
+            if entry['type'] == 'hdd':
+                cluster_metric['hdd_total'] = entry['size']
+                cluster_metric['hdd_allocated'] = entry['used']
+                cluster_metric['hdd_free'] = entry['available']
+            elif entry['type'] == 'ssd':
+                cluster_metric['total_capacity'] = entry['size']
+                cluster_metric['allocated_capacity'] = entry['used']
+                cluster_metric['free_capacity'] = entry['available']
+
+        for entry in response_cpu_utilization['records']:
+            e_name = entry['name']
+            record_name = e_name[len(e_name) - 2:]       # Get last two character in a string
+            if record_name == '01':
+                cluster_metric['cpu_total_01'] = entry['metric']['processor_utilization']
+            elif record_name == '02':
+                cluster_metric['cpu_total_02'] = entry['metric']['processor_utilization']
+
+
         cluster_metric.update({'san_ip': self.netapp_api_ip})
         cluster_data.append(cluster_metric)
         return cluster_data
