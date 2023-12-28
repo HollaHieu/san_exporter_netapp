@@ -128,9 +128,9 @@ class NetAppMetrics(base_driver.Metrics):
                                                        san_ip=cluster['san_ip']).set(other_iops)
         self.gauge_san_cluster_block_read_latency.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
                                                          san_ip=cluster['san_ip']).set(read_latency)
-        self.gauge_san_cluster_block_read_latency.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
+        self.gauge_san_cluster_block_write_latency.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
                                                          san_ip=cluster['san_ip']).set(write_latency)
-        self.gauge_san_cluster_block_read_latency.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
+        self.gauge_san_cluster_block_other_latency.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
                                                          san_ip=cluster['san_ip']).set(other_latency)
         self.gauge_san_cluster_block_read_byte_rate.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
                                                            san_ip=cluster['san_ip']).set(read_throughput / 1024)
