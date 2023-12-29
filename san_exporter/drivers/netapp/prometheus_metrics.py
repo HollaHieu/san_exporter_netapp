@@ -190,7 +190,7 @@ class NetAppMetrics(base_driver.Metrics):
                                                        pool_labels, registry=self.registry)
         self.gauge_san_pool_block_write_latency = Gauge('san_pool_number_write_latency', 'Pool Write Latency',
                                                         pool_labels, registry=self.registry)
-        self.gauge_san_pool_block_other_latency = Gauge('san_pool_number_other_latency', 'Pool Other Latency',
+        self.gauge_san_pool_block_total_latency = Gauge('san_pool_number_total_latency', 'Pool Total Latency',
                                                         pool_labels, registry=self.registry)
 
         self.gauge_san_pool_block_read_byte_rate = Gauge('san_pool_number_read_byte_rate', 'Pool Read Throughput - KiB/s',
@@ -210,7 +210,7 @@ class NetAppMetrics(base_driver.Metrics):
         other_iops = pool_info['other_iops']
         read_latency = pool_info['read_latency']
         write_latency = pool_info['write_latency']
-        other_latency = pool_info['other_latency']
+        total_latency = pool_info['total_latency']
         read_throughput = pool_info['read_throughput']
         write_throughput = pool_info['write_throughput']
         other_throughput = pool_info['other_throughput']
@@ -233,10 +233,10 @@ class NetAppMetrics(base_driver.Metrics):
                                                     san_ip=pool_info['san_ip']).set(other_iops)
         self.gauge_san_pool_block_read_latency.labels(backend_name=self.backend_name, pool_name=pool_info['name'],
                                                       san_ip=pool_info['san_ip']).set(read_latency)
-        self.gauge_san_pool_block_read_latency.labels(backend_name=self.backend_name, pool_name=pool_info['name'],
+        self.gauge_san_pool_block_write_latency.labels(backend_name=self.backend_name, pool_name=pool_info['name'],
                                                       san_ip=pool_info['san_ip']).set(write_latency)
-        self.gauge_san_pool_block_read_latency.labels(backend_name=self.backend_name, pool_name=pool_info['name'],
-                                                      san_ip=pool_info['san_ip']).set(other_latency)
+        self.gauge_san_pool_block_total_latency.labels(backend_name=self.backend_name, pool_name=pool_info['name'],
+                                                      san_ip=pool_info['san_ip']).set(total_latency)
         self.gauge_san_pool_block_read_byte_rate.labels(backend_name=self.backend_name, pool_name=pool_info['name'],
                                                         san_ip=pool_info['san_ip']).set(read_throughput / 1024)
         self.gauge_san_pool_block_write_byte_rate.labels(backend_name=self.backend_name, pool_name=pool_info['name'],

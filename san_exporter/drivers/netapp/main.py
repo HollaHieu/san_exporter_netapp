@@ -129,7 +129,7 @@ class NetAppExporter(base_driver.ExporterDriver):
                         'read_iops': t['metric']['iops']['read'], 'write_iops': t['metric']['iops']['write'],
                         'other_iops': t['metric']['iops']['other'], 'read_latency': t['metric']['latency']['read'],
                         'write_latency': t['metric']['latency']['write'],
-                        'other_latency': t['metric']['latency']['other'],
+                        'total_latency': t['metric']['latency']['total'],
                         'read_throughput': t['metric']['throughput']['read'],
                         'write_throughput': t['metric']['throughput']['write'],
                         'other_throughput': t['metric']['throughput']['other'], 'status': t['metric']['status']}
