@@ -101,8 +101,8 @@ class NetAppExporter(base_driver.ExporterDriver):
 
         # aggregate_id = Xac dinh bang cach check: (1) type cua aggregate (SAS/ SSD); (2) control node name ma aggregate thuoc 
         for entry in response_tier_aggregate['records']:
-            e_name = entry['name']
-            agg_link = entry['_links']['self']['href']
+            en_name = entry['name']
+            agg_link = "/api/storage/aggregates/" + entry['uuid']
             response_agg_link = response = requests.get('https://' + self.netapp_api_ip + agg_link, headers=self.headers, auth=self.auth,
                                 verify=False).json()
             control_node = response_agg_link['node']['name']
@@ -139,7 +139,7 @@ class NetAppExporter(base_driver.ExporterDriver):
             cluster_metric['sas_02_used'] = 0
             cluster_metric['sas_02_free'] = 0     
 
-        if aggr_ssd == True:
+        if aggr_ssd == False:
             cluster_metric['ssd_01_total'] = 0
             cluster_metric['ssd_01_used'] = 0
             cluster_metric['ssd_01_free'] = 0
