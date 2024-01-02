@@ -39,6 +39,8 @@ class NetAppExporter(base_driver.ExporterDriver):
         #Hieu 
         hdd = False
         ssd = False
+        aggr_sas = False
+        aggr_ssd = False
 
         response_storage_cluster = requests.get('https://' + self.netapp_api_ip + '/api/storage/cluster?fields=efficiency%2Cblock_storage%2Ccloud_storage%2Cefficiency_without_snapshots%2Cefficiency_without_snapshots_flexclones',
                                 headers=self.headers, auth=self.auth,
@@ -49,6 +51,10 @@ class NetAppExporter(base_driver.ExporterDriver):
                                 verify=False).json()
 
         response_lun = requests.get('https://' + self.netapp_api_ip + '/api/storage/luns?return_records=false&status.container_state=online',
+                                headers=self.headers, auth=self.auth,
+                                verify=False).json()
+
+        response_tier_aggregate = requests.get('https://' + self.netapp_api_ip + '/api/storage/aggregates?fields=name%2Cstate%2Cspace.block_storage.available%2Cspace.block_storage.size%2Cspace.cloud_storage.used%2Cspace.efficiency.logical_used%2Cspace.efficiency.ratio%2Cspace.block_storage.used%2Cblock_storage.hybrid_cache.enabled%2Cblock_storage.primary.disk_class%2Cmetric.iops.total%2Cmetric.latency.total%2Cmetric.throughput.total%2Cblock_storage.mirror.enabled%2Ccloud_storage.stores.cloud_store.name%2Ccloud_storage.attach_eligible%2Cblock_storage.primary.disk_count%2Cspace.block_storage.inactive_user_data%2Csnaplock_type%2Cinactive_data_reporting.enabled%2Cspace.block_storage.physical_used%2Cspace.efficiency_without_snapshots.logical_used%2Cspace.efficiency_without_snapshots.ratio%2Cspace.efficiency_without_snapshots_flexclones.logical_used%2Cspace.efficiency_without_snapshots_flexclones.ratio',
                                 headers=self.headers, auth=self.auth,
                                 verify=False).json()
         #Hieu
@@ -70,6 +76,7 @@ class NetAppExporter(base_driver.ExporterDriver):
                           'total_lun': response_lun['num_records']
                           }
 
+        # Tier-HDD and SSD
         for entry in response_storage_cluster['block_storage']['medias']:
             if entry['type'] == 'hdd':
                 cluster_metric['hdd_total'] = entry['size']
@@ -92,6 +99,55 @@ class NetAppExporter(base_driver.ExporterDriver):
             cluster_metric['allocated_capacity'] = 0
             cluster_metric['free_capacity'] = 0
 
+        # aggregate_id = Xac dinh bang cach check: (1) type cua aggregate (SAS/ SSD); (2) control node name ma aggregate thuoc 
+        for entry in response_tier_aggregate['records']:
+            e_name = entry['name']
+            agg_link = entry['_links']['self']['href']
+            response_agg_link = response = requests.get('https://' + self.netapp_api_ip + agg_link, headers=self.headers, auth=self.auth,
+                                verify=False).json()
+            control_node = response_agg_link['node']['name']
+            _control_node = control_node[len(control_node) - 2:]        # Get last two character in control node name
+            
+            agg_type = response_agg_link['block_storage']['primary']['disk_type']           # (sas/ ssd)
+
+            if agg_type == 'sas':
+                aggr_sas = True
+                if _control_node == '01':
+                    cluster_metric['sas_01_total'] = response_agg_link['space']['block_storage']['size']
+                    cluster_metric['sas_01_used'] = response_agg_link['space']['block_storage']['used']
+                    cluster_metric['sas_01_free'] = response_agg_link['space']['block_storage']['available']
+                elif _control_node == '02':
+                    cluster_metric['sas_02_total'] = response_agg_link['space']['block_storage']['size']
+                    cluster_metric['sas_02_used'] = response_agg_link['space']['block_storage']['used']
+                    cluster_metric['sas_02_free'] = response_agg_link['space']['block_storage']['available']
+            elif agg_type == 'ssd':
+                aggr_ssd = True
+                if _control_node == '01':
+                    cluster_metric['ssd_01_total'] = response_agg_link['space']['block_storage']['size']
+                    cluster_metric['ssd_01_used'] = response_agg_link['space']['block_storage']['used']
+                    cluster_metric['ssd_01_free'] = response_agg_link['space']['block_storage']['available']
+                elif _control_node == '02':
+                    cluster_metric['ssd_02_total'] = response_agg_link['space']['block_storage']['size']
+                    cluster_metric['ssd_02_used'] = response_agg_link['space']['block_storage']['used']
+                    cluster_metric['ssd_02_free'] = response_agg_link['space']['block_storage']['available']
+
+        if aggr_sas == False:
+            cluster_metric['sas_01_total'] = 0
+            cluster_metric['sas_01_used'] = 0
+            cluster_metric['sas_01_free'] = 0
+            cluster_metric['sas_02_total'] = 0
+            cluster_metric['sas_02_used'] = 0
+            cluster_metric['sas_02_free'] = 0     
+
+        if aggr_ssd == True:
+            cluster_metric['ssd_01_total'] = 0
+            cluster_metric['ssd_01_used'] = 0
+            cluster_metric['ssd_01_free'] = 0
+            cluster_metric['ssd_02_total'] = 0
+            cluster_metric['ssd_02_used'] = 0
+            cluster_metric['ssd_02_free'] = 0
+
+        #CPU
         for entry in response_cpu_utilization['records']:
             e_name = entry['name']
             record_name = e_name[len(e_name) - 2:]       # Get last two character in a string
