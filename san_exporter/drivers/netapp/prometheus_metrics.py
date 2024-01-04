@@ -134,48 +134,17 @@ class NetAppMetrics(base_driver.Metrics):
         hdd_free = cluster['hdd_free']
         total_lun = cluster['total_lun']
 
-        #new
-        aggr_hdd_01_total = cluster['sas_01_total']
-        aggr_hdd_01_used = cluster['sas_01_used']
-        aggr_hdd_01_free = cluster['sas_01_free']
-        aggr_hdd_02_total = cluster['sas_02_total']
-        aggr_hdd_02_used = cluster['sas_02_used']
-        aggr_hdd_02_free = cluster['sas_02_free']
-
-        aggr_ssd_01_total = cluster['ssd_01_total']
-        aggr_ssd_01_used = cluster['ssd_01_used']
-        aggr_ssd_01_free = cluster['ssd_01_free']
-        aggr_ssd_02_total = cluster['ssd_02_total']
-        aggr_ssd_02_used = cluster['ssd_02_used']
-        aggr_ssd_02_free = cluster['ssd_02_free']
-
         #Hieu new
-        self.gauge_aggr_total_capacity_mib.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
-                                                 san_ip=cluster['san_ip'], aggregate_type='hdd', controller_node='01').set(aggr_hdd_01_total / 1024 / 1024)
-        self.gauge_aggr_total_capacity_mib.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
-                                                 san_ip=cluster['san_ip'], aggregate_type='hdd', controller_node='02').set(aggr_hdd_02_total / 1024 / 1024)
-        self.gauge_aggr_total_capacity_mib.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
-                                                 san_ip=cluster['san_ip'], aggregate_type='ssd', controller_node='01').set(aggr_ssd_01_total / 1024 / 1024)
-        self.gauge_aggr_total_capacity_mib.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
-                                                 san_ip=cluster['san_ip'], aggregate_type='ssd', controller_node='02').set(aggr_ssd_02_total / 1024 / 1024)
-        
-        self.gauge_aggr_used_capacity_mib.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
-                                                 san_ip=cluster['san_ip'], aggregate_type='hdd', controller_node='01').set(aggr_hdd_01_used / 1024 / 1024)
-        self.gauge_aggr_used_capacity_mib.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
-                                                 san_ip=cluster['san_ip'], aggregate_type='hdd', controller_node='02').set(aggr_hdd_02_used / 1024 / 1024)
-        self.gauge_aggr_used_capacity_mib.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
-                                                 san_ip=cluster['san_ip'], aggregate_type='ssd', controller_node='01').set(aggr_ssd_01_used / 1024 / 1024)
-        self.gauge_aggr_used_capacity_mib.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
-                                                 san_ip=cluster['san_ip'], aggregate_type='ssd', controller_node='02').set(aggr_ssd_02_used / 1024 / 1024)
-        
-        self.gauge_aggr_free_capacity_mib.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
-                                                 san_ip=cluster['san_ip'], aggregate_type='hdd', controller_node='01').set(aggr_hdd_01_free / 1024 / 1024)
-        self.gauge_aggr_free_capacity_mib.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
-                                                 san_ip=cluster['san_ip'], aggregate_type='hdd', controller_node='02').set(aggr_hdd_02_free / 1024 / 1024)
-        self.gauge_aggr_free_capacity_mib.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
-                                                 san_ip=cluster['san_ip'], aggregate_type='ssd', controller_node='01').set(aggr_ssd_01_free / 1024 / 1024)
-        self.gauge_aggr_free_capacity_mib.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
-                                                 san_ip=cluster['san_ip'], aggregate_type='ssd', controller_node='02').set(aggr_ssd_02_free / 1024 / 1024)
+        for key_tup in cluster:
+            if key_tup[0] == 'aggr_total':
+                self.gauge_aggr_total_capacity_mib.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
+                                                 san_ip=cluster['san_ip'], aggregate_type=key_tup[1], controller_node=key_tup[2], aggregate_name=key_tup[3]).set(cluster[key_tup] / 1024 / 1024)
+            elif key_tup[0] == 'aggr_used':
+                self.gauge_aggr_used_capacity_mib.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
+                                                 san_ip=cluster['san_ip'], aggregate_type=key_tup[1], controller_node=key_tup[2], aggregate_name=key_tup[3]).set(cluster[key_tup] / 1024 / 1024)
+            elif key_tup[0] == 'aggr_free':
+                self.gauge_aggr_free_capacity_mib.labels(backend_name=self.backend_name, cluster_name=cluster['name'],
+                                                 san_ip=cluster['san_ip'], aggregate_type=key_tup[1], controller_node=key_tup[2], aggregate_name=key_tup[3]).set(cluster[key_tup] / 1024 / 1024)
         #Hieu new
 
         self.gauge_san_cluster_block_read_iops.labels(backend_name=self.backend_name, cluster_name=cluster['name'],

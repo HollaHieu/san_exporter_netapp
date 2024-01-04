@@ -39,8 +39,8 @@ class NetAppExporter(base_driver.ExporterDriver):
         #Hieu 
         hdd = False
         ssd = False
-        aggr_sas = False
-        aggr_ssd = False
+        # aggr_sas = False
+        # aggr_ssd = False
 
         response_storage_cluster = requests.get('https://' + self.netapp_api_ip + '/api/storage/cluster?fields=efficiency%2Cblock_storage%2Ccloud_storage%2Cefficiency_without_snapshots%2Cefficiency_without_snapshots_flexclones',
                                 headers=self.headers, auth=self.auth,
@@ -110,42 +110,13 @@ class NetAppExporter(base_driver.ExporterDriver):
             
             agg_type = response_agg_link['block_storage']['primary']['disk_type']           # (sas/ ssd)
 
-            if agg_type == 'sas':
-                aggr_sas = True
-                if _control_node == '01':
-                    cluster_metric['sas_01_total'] = response_agg_link['space']['block_storage']['size']
-                    cluster_metric['sas_01_used'] = response_agg_link['space']['block_storage']['used']
-                    cluster_metric['sas_01_free'] = response_agg_link['space']['block_storage']['available']
-                elif _control_node == '02':
-                    cluster_metric['sas_02_total'] = response_agg_link['space']['block_storage']['size']
-                    cluster_metric['sas_02_used'] = response_agg_link['space']['block_storage']['used']
-                    cluster_metric['sas_02_free'] = response_agg_link['space']['block_storage']['available']
-            elif agg_type == 'ssd':
-                aggr_ssd = True
-                if _control_node == '01':
-                    cluster_metric['ssd_01_total'] = response_agg_link['space']['block_storage']['size']
-                    cluster_metric['ssd_01_used'] = response_agg_link['space']['block_storage']['used']
-                    cluster_metric['ssd_01_free'] = response_agg_link['space']['block_storage']['available']
-                elif _control_node == '02':
-                    cluster_metric['ssd_02_total'] = response_agg_link['space']['block_storage']['size']
-                    cluster_metric['ssd_02_used'] = response_agg_link['space']['block_storage']['used']
-                    cluster_metric['ssd_02_free'] = response_agg_link['space']['block_storage']['available']
+            total_key_tup = ('aggr_total', agg_type, _control_node, en_name)
+            used_key_tup = ('aggr_used', agg_type, _control_node, en_name)
+            free_key_tup = ('aggr_free', agg_type, _control_node, en_name)
 
-        if aggr_sas == False:
-            cluster_metric['sas_01_total'] = 0
-            cluster_metric['sas_01_used'] = 0
-            cluster_metric['sas_01_free'] = 0
-            cluster_metric['sas_02_total'] = 0
-            cluster_metric['sas_02_used'] = 0
-            cluster_metric['sas_02_free'] = 0     
-
-        if aggr_ssd == False:
-            cluster_metric['ssd_01_total'] = 0
-            cluster_metric['ssd_01_used'] = 0
-            cluster_metric['ssd_01_free'] = 0
-            cluster_metric['ssd_02_total'] = 0
-            cluster_metric['ssd_02_used'] = 0
-            cluster_metric['ssd_02_free'] = 0
+            cluster_metric[total_key_tup] = response_agg_link['space']['block_storage']['size']
+            cluster_metric[used_key_tup] = response_agg_link['space']['block_storage']['used']
+            cluster_metric[free_key_tup] = response_agg_link['space']['block_storage']['available']
 
         #CPU
         for entry in response_cpu_utilization['records']:
