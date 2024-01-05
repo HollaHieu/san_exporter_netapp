@@ -50,7 +50,7 @@ class NetAppMetrics(base_driver.Metrics):
         cluster_labels = ["backend_name", "san_ip", "cluster_name"]
 
         #new
-        aggregate_labels = ["backend_name", "san_ip", "cluster_name", "aggregate_type", "controller_node"]
+        aggregate_labels = ["backend_name", "san_ip", "cluster_name", "aggregate_type", "controller_node", "aggregate_name"]
 
         self.gauge_san_cluster_block_read_iops = Gauge('san_cluster_number_read_io', 'Cluster Read IOPS',
                                                        cluster_labels, registry=self.registry)
