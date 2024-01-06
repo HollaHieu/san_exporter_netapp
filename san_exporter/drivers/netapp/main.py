@@ -123,9 +123,15 @@ class NetAppExporter(base_driver.ExporterDriver):
             e_name = entry['name']
             record_name = e_name[len(e_name) - 2:]       # Get last two character in a string
             if record_name == '01':
-                cluster_metric['cpu_total_01'] = entry['metric']['processor_utilization']
+                if 'metric' in entry:
+                    cluster_metric['cpu_total_01'] = entry['metric']['processor_utilization']
+                else:
+                    cluster_metric['cpu_total_01'] = 0
             elif record_name == '02':
-                cluster_metric['cpu_total_02'] = entry['metric']['processor_utilization']
+                if 'metric' in entry:
+                    cluster_metric['cpu_total_02'] = entry['metric']['processor_utilization']
+                else:
+                    cluster_metric['cpu_total_02'] = 0
 
 
         cluster_metric.update({'san_ip': self.netapp_api_ip})
