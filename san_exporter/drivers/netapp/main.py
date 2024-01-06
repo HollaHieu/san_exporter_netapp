@@ -144,10 +144,16 @@ class NetAppExporter(base_driver.ExporterDriver):
             'https://' + self.netapp_api_ip + '/api/cluster/nodes?fields=name,serial_number,state,model,version',
             headers=self.headers, auth=self.auth, verify=False).json()
         for t in response['records']:
-            data = {'name': t['name'], 'state': t['state'], 'model': t['model'], 'serial_number': t['serial_number'],
-                    'version': t['version']['full']}
-            data.update({'san_ip': self.netapp_api_ip})
-            node_data.append(data)
+            if t['state'] == 'up':
+                data = {'name': t['name'], 'state': t['state'], 'model': t['model'], 'serial_number': t['serial_number'],
+                        'version': t['version']['full']}
+                data.update({'san_ip': self.netapp_api_ip})
+                node_data.append(data)
+            else:
+                data = {'name': t['name'], 'state': t['state'], 'model': 'None', 'serial_number': 'None',
+                        'version': t['version']['full']}
+                data.update({'san_ip': self.netapp_api_ip})
+                node_data.append(data)
         return node_data
 
     def get_pool_info(self):
