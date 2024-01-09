@@ -41,13 +41,13 @@ class NetAppMetrics(base_driver.Metrics):
         self.site = config['site']
 
     def define_cluster_info(self):
-        cluster_labels = ["name", "backend_name", "san_ip", "version"]
+        cluster_labels = ["name", "backend_name", "san_ip", "version", "site", "system_owner"]
         self.gauge_san_cluster_info = Gauge('san_storage_info', 'Basic information',
                                             cluster_labels, registry=self.registry)
 
     def parse_cluster_info(self, cluster):
         self.gauge_san_cluster_info.labels(backend_name=self.backend_name, name=cluster['name'],
-                                           san_ip=cluster['san_ip'], version=cluster['version']).set(1)
+                                           san_ip=cluster['san_ip'], version=cluster['version'], site=self.site, system_owner=self.system_owner).set(1)
 
     def define_cluster_metric(self):
         cluster_labels = ["backend_name", "san_ip", "cluster_name"]
