@@ -36,6 +36,8 @@ class NetAppMetrics(base_driver.Metrics):
             self.define_node_metrics()
         if self.optional_metrics.get('disk'):
             self.define_disk_metrics()
+        # new - 09/01/2024
+        self.system_owner = config['system_owner']
 
     def define_cluster_info(self):
         cluster_labels = ["name", "backend_name", "san_ip", "version"]
@@ -272,7 +274,7 @@ class NetAppMetrics(base_driver.Metrics):
                                                          san_ip=pool_info['san_ip']).set(other_throughput / 1024)
 
     def define_node_metrics(self):
-        node_labels = ['backend_name', 'san_ip', 'node_name', 'serial_number']
+        node_labels = ['backend_name', 'san_ip', 'node_name', 'serial_number', 'system_owner']
         self.gauge_san_node_state = Gauge('san_node_state', ' State Node',
                                           node_labels, registry=self.registry)
 
@@ -286,7 +288,7 @@ class NetAppMetrics(base_driver.Metrics):
         else:
             state = 0
         self.gauge_san_node_state.labels(backend_name=self.backend_name, san_ip=san_ip, node_name=name,
-                                         serial_number=serial).set(state)
+                                         serial_number=serial, system_owner=self.system_owner).set(state)
 
     def define_disk_metrics(self):
         disk_labels = ['backend_name', 'san_ip', 'name']

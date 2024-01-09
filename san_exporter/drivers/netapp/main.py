@@ -151,7 +151,7 @@ class NetAppExporter(base_driver.ExporterDriver):
                 node_data.append(data)
             else:
                 data = {'name': t['name'], 'state': t['state'], 'model': 'None', 'serial_number': 'None',
-                        'version': t['version']['full']}
+                        'version': t['version'][' full']}
                 data.update({'san_ip': self.netapp_api_ip})
                 node_data.append(data)
         return node_data
