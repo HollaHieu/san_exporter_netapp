@@ -54,7 +54,7 @@ class NetAppExporter(base_driver.ExporterDriver):
                                 headers=self.headers, auth=self.auth,
                                 verify=False).json()
 
-        response_tier_aggregate = requests.get('https://' + self.netapp_api_ip + '/api/storage/aggregates?fields=name%2Cstate%2Cspace.block_storage.available%2Cspace.block_storage.size%2Cspace.cloud_storage.used%2Cspace.efficiency.logical_used%2Cspace.efficiency.ratio%2Cspace.block_storage.used%2Cblock_storage.hybrid_cache.enabled%2Cblock_storage.primary.disk_class%2Cmetric.iops.total%2Cmetric.latency.total%2Cmetric.throughput.total%2Cblock_storage.mirror.enabled%2Ccloud_storage.stores.cloud_store.name%2Ccloud_storage.attach_eligible%2Cblock_storage.primary.disk_count%2Cspace.block_storage.inactive_user_data%2Csnaplock_type%2Cinactive_data_reporting.enabled%2Cspace.block_storage.physical_used%2Cspace.efficiency_without_snapshots.logical_used%2Cspace.efficiency_without_snapshots.ratio%2Cspace.efficiency_without_snapshots_flexclones.logical_used%2Cspace.efficiency_without_snapshots_flexclones.ratio',
+        response_tier_aggregate = requests.get('https://' + self.netapp_api_ip + '/api/storage/aggregates?fields=space%2Cmetric%2Cblock_storage.primary%2Cblock_storage.hybrid_cache',
                                 headers=self.headers, auth=self.auth,
                                 verify=False).json()
         #Hieu
