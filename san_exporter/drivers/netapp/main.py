@@ -42,7 +42,7 @@ class NetAppExporter(base_driver.ExporterDriver):
         # aggr_sas = False
         # aggr_ssd = False
 
-        response_storage_cluster = requests.get('https://' + self.netapp_api_ip + '/api/storage/cluster?fields=efficiency%2Cblock_storage%2Ccloud_storage%2Cefficiency_without_snapshots%2Cefficiency_without_snapshots_flexclones',
+        response_storage_cluster = requests.get('https://' + self.netapp_api_ip + '/api/storage/cluster?fields=block_storage',
                                 headers=self.headers, auth=self.auth,
                                 verify=False).json()
 
