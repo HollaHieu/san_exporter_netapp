@@ -199,7 +199,7 @@ class NetAppMetrics(base_driver.Metrics):
                                                  san_ip=cluster['san_ip']).set(total_lun)
 
     def define_pool_info_metrics(self):
-        pool_labels = ["backend_name", "san_ip", "pool_name"]
+        # pool_labels = ["backend_name", "san_ip", "pool_name"]
         #Hieu
         volume_labels = ["backend_name", "san_ip", "volume_name"]
         self.gauge_san_pool_total_capacity = Gauge('san_pool_total_capacity_mib',
@@ -210,27 +210,27 @@ class NetAppMetrics(base_driver.Metrics):
                                                   'Free capacity of pool in MiB', volume_labels, registry=self.registry)
 
         self.gauge_san_pool_block_read_iops = Gauge('san_pool_number_read_io', 'Pool Read IOPS',
-                                                    pool_labels, registry=self.registry)
+                                                    volume_labels, registry=self.registry)
         self.gauge_san_pool_block_write_iops = Gauge('san_pool_number_write_io', 'Pool Write IOPS',
-                                                     pool_labels, registry=self.registry)
+                                                     volume_labels, registry=self.registry)
         self.gauge_san_pool_block_other_iops = Gauge('san_pool_number_other_io', 'Pool Other IOPS',
-                                                     pool_labels, registry=self.registry)
+                                                     volume_labels, registry=self.registry)
 
         self.gauge_san_pool_block_read_latency = Gauge('san_pool_number_read_latency', 'Pool Read Latency',
-                                                       pool_labels, registry=self.registry)
+                                                       volume_labels, registry=self.registry)
         self.gauge_san_pool_block_write_latency = Gauge('san_pool_number_write_latency', 'Pool Write Latency',
-                                                        pool_labels, registry=self.registry)
+                                                        volume_labels, registry=self.registry)
         self.gauge_san_pool_block_total_latency = Gauge('san_pool_number_total_latency', 'Pool Total Latency',
-                                                        pool_labels, registry=self.registry)
+                                                        volume_labels, registry=self.registry)
 
         self.gauge_san_pool_block_read_byte_rate = Gauge('san_pool_number_read_byte_rate', 'Pool Read Throughput - KiB/s',
-                                                         pool_labels, registry=self.registry)
+                                                         volume_labels, registry=self.registry)
         self.gauge_san_pool_block_write_byte_rate = Gauge('san_pool_number_write_byte_rate',
                                                           'Pool Write Throughput - KiB/s',
-                                                          pool_labels, registry=self.registry)
+                                                          volume_labels, registry=self.registry)
         self.gauge_san_pool_block_other_byte_rate = Gauge('san_pool_number_other_byte_rate',
                                                           'Pool Other Throughput - KiB/s',
-                                                          pool_labels, registry=self.registry)
+                                                          volume_labels, registry=self.registry)
 
     def parse_pool_info(self, pool_info):
         total_capacity = pool_info['size_total']
