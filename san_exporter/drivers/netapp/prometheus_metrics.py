@@ -255,23 +255,23 @@ class NetAppMetrics(base_driver.Metrics):
         self.gauge_san_pool_free_capacity.labels(backend_name=self.backend_name, volume_name=pool_info['name'],
                                                  san_ip=pool_info['san_ip']).set(free_capacity / 1024 / 1024)
 
-        self.gauge_san_pool_block_read_iops.labels(backend_name=self.backend_name, pool_name=pool_info['name'],
+        self.gauge_san_pool_block_read_iops.labels(backend_name=self.backend_name, volume_name=pool_info['name'],
                                                    san_ip=pool_info['san_ip']).set(read_iops)
-        self.gauge_san_pool_block_write_iops.labels(backend_name=self.backend_name, pool_name=pool_info['name'],
+        self.gauge_san_pool_block_write_iops.labels(backend_name=self.backend_name, volume_name=pool_info['name'],
                                                     san_ip=pool_info['san_ip']).set(write_iops)
-        self.gauge_san_pool_block_other_iops.labels(backend_name=self.backend_name, pool_name=pool_info['name'],
+        self.gauge_san_pool_block_other_iops.labels(backend_name=self.backend_name, volume_name=pool_info['name'],
                                                     san_ip=pool_info['san_ip']).set(other_iops)
-        self.gauge_san_pool_block_read_latency.labels(backend_name=self.backend_name, pool_name=pool_info['name'],
+        self.gauge_san_pool_block_read_latency.labels(backend_name=self.backend_name, volume_name=pool_info['name'],
                                                       san_ip=pool_info['san_ip']).set(read_latency)
-        self.gauge_san_pool_block_write_latency.labels(backend_name=self.backend_name, pool_name=pool_info['name'],
+        self.gauge_san_pool_block_write_latency.labels(backend_name=self.backend_name, volume_name=pool_info['name'],
                                                       san_ip=pool_info['san_ip']).set(write_latency)
-        self.gauge_san_pool_block_total_latency.labels(backend_name=self.backend_name, pool_name=pool_info['name'],
+        self.gauge_san_pool_block_total_latency.labels(backend_name=self.backend_name, volume_name=pool_info['name'],
                                                       san_ip=pool_info['san_ip']).set(total_latency)
-        self.gauge_san_pool_block_read_byte_rate.labels(backend_name=self.backend_name, pool_name=pool_info['name'],
+        self.gauge_san_pool_block_read_byte_rate.labels(backend_name=self.backend_name, volume_name=pool_info['name'],
                                                         san_ip=pool_info['san_ip']).set(read_throughput / 1024)
-        self.gauge_san_pool_block_write_byte_rate.labels(backend_name=self.backend_name, pool_name=pool_info['name'],
+        self.gauge_san_pool_block_write_byte_rate.labels(backend_name=self.backend_name, volume_name=pool_info['name'],
                                                          san_ip=pool_info['san_ip']).set(write_throughput / 1024)
-        self.gauge_san_pool_block_other_byte_rate.labels(backend_name=self.backend_name, pool_name=pool_info['name'],
+        self.gauge_san_pool_block_other_byte_rate.labels(backend_name=self.backend_name, volume_name=pool_info['name'],
                                                          san_ip=pool_info['san_ip']).set(other_throughput / 1024)
 
     def define_node_metrics(self):
