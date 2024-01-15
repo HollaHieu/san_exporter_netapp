@@ -132,7 +132,7 @@ def do_get(backend_name):
         if (running_backends[backend_name][0].time_last_request - cached[1]['time']) > timeout:
             message = 'Data timeout in cache file of storage backend: ' + backend_name
             logging.warning(message)
-            return message
+            # return message                                                                    #hieunm don't mask data in cache file if timeout > 600
         data = cached[0]
         backend = running_backends[backend_name][1]
         backend.parse_metrics(data)

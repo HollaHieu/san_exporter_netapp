@@ -16,7 +16,7 @@
 #    under the License.
 #
 
-from time import sleep
+from time import sleep, time
 
 import requests
 from san_exporter.drivers import base_driver
