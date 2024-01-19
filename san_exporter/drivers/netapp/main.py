@@ -182,7 +182,10 @@ class NetAppExporter(base_driver.ExporterDriver):
             'https://' + self.netapp_api_ip + '/api/storage/disks?fields=name,state,model,serial_number',
             headers=self.headers, auth=self.auth, verify=False).json()
         for t in response['records']:
-            data = {'name': t['name'], 'state': t['state'], 'model': t['model'], 'serial_number': t['serial_number']}
+            if 'state' in t:
+                data = {'name': t['name'], 'state': t['state'], 'model': t['model'], 'serial_number': t['serial_number']}
+            else:
+                data = {'name': t['name'], 'state': 'None', 'model': t['model'], 'serial_number': t['serial_number']}
             data.update({'san_ip': self.netapp_api_ip})
             disk_data.append(data)
         return disk_data
