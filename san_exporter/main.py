@@ -26,6 +26,9 @@ import urllib3
 from san_exporter.drivers import load_driver
 from san_exporter.utils.utils import get_data
 
+#Hieu
+from flask import request
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 app = Flask(__name__)
@@ -147,6 +150,62 @@ def do_get(backend_name):
         return render_template('index.html',
                                enabled_backends=config['enabled_backends'])
 
+#Hieu: Limit IOPS 
+@app.route('/limit_iops/<backend_name>', methods=['POST'])
+def set_limit_iops():
+    request_data = request.get_json()
+    volume_id = None
+    iops_limit = None
+    lun_id = None
+
+    # TODO: Xac dinh netapp_backend dua vao volume_type va location => Can co mapping netapp_backend (va Netapp hoac Ceph) <=> volume_type va location (Dua vao file config)
+    netapp_backend = None
+    
+    if request_data:
+        # volume_id param
+        if 'volume_id' in request_data:
+            volume_id = request_data['volume_id']
+        else:
+            message = "Set IOPS limit failed! No volume_id found..."
+            logging.error(message)
+            return "<p>Set IOPS limit failed! No volume_id found...</p>"
+        
+        # iops_limit param
+        if 'iops_limit' in request_data:
+            iops_limit = request_data['iops_limit']
+        else:
+            message = "Set IOPS limit failed! No iops_limit found..."
+            logging.error(message)
+            return "<p>Set IOPS limit failed! No iops_limit found...</p>"
+        
+        # netapp_backend param
+        if 'netapp_backend' in request_data:
+            netapp_backend = request_data['netapp_backend']
+        else:
+            message = "Set IOPS limit failed! No netapp_backend found..."
+            logging.error(message)
+            return "<p>Set IOPS limit failed! No netapp_backend found...</p>"        
+    
+    else:
+        return "<p>Set IOPS limit failed! POST data ('netapp_backend' or 'volume_id' or 'iops_limit') not found...</p>"
+
+
+    # Get LUN_id (uuid) from volume_id in SAN Netapp 
+    if netapp_backend in config['enabled_backends']:
+        lun_id = running_backends[netapp_backend][0].convert_volume_luns(volume_id)
+        message = "lun_id = " + lun_id
+        logging.info(message)
+    else:
+        message = "Error!!! Modifying a disabled netapp_backend ..."
+        logging.error(message)
+
+    # Create a new qos_policy group for limiting IOPS in SAN Netapp (if not existing one already) 
+    
+
+    # Proxy request from ATM and send HTTP Patch method to SAN
+
+
+    return 'JSON Object Example'
 
 if __name__ == '__main__':
     app = create_app()
