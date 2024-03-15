@@ -37,7 +37,7 @@ class NetAppExporter(base_driver.ExporterDriver):
 
     #Hieu_IOPS
     def convert_volume_luns(self, volume_id):
-        response_lun_id = requests.get('https://' + self.netapp_api_ip + '/api/storage/luns?return_timeout=120&max_records=40&fields=svm%2Clocation%2Cos_type%2Cspace%2Cstatus%2Cserial_number%2Ccomment%2Cqos_policy%2Cmetric&status.container_state=online&order_by=metric.iops.total%20asc&query=*volume-' + volume_id + '*&query_fields=location.logical_unit%2Csvm.name%2Clocation.volume',
+        response_lun_id = requests.get('https://' + self.netapp_api_ip + '/api/storage/luns?return_timeout=120&max_records=40&fields=svm%2Clocation%2Cos_type%2Cspace%2Cstatus%2Cserial_number%2Ccomment%2Cqos_policy%2Cmetric&status.container_state=online&query=*volume-' + volume_id + '*&query_fields=location.logical_unit%2Csvm.name%2Clocation.volume',
                                 headers=self.headers, auth=self.auth,
                                 verify=False).json()
         lun_id = response_lun_id['records'][0]['uuid']

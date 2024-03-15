@@ -152,7 +152,7 @@ def do_get(backend_name):
 
 #Hieu: Limit IOPS 
 @app.route('/limit_iops/<backend_name>', methods=['POST'])
-def set_limit_iops():
+def set_limit_iops(backend_name):
     request_data = request.get_json()
     volume_id = None
     iops_limit = None
