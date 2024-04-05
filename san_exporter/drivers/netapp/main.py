@@ -45,7 +45,7 @@ class NetAppExporter(base_driver.ExporterDriver):
             },
             "name": "IOPS_5000",
             "svm": {
-                "uuid": "86a9467e-a0fc-11ec-a7a2-d039ea2812b"
+                "uuid": "86a9467e-a0fc-11ec-a7a2-d039ea2d812b"
             }
         }
 
