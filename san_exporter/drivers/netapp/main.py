@@ -23,6 +23,8 @@ from san_exporter.drivers import base_driver
 from san_exporter.drivers.netapp import prometheus_metrics
 from san_exporter.utils.utils import cache_data
 
+#Hieu
+import logging
 
 class NetAppExporter(base_driver.ExporterDriver):
     def __init__(self, config=None, interval=10):
@@ -34,6 +36,22 @@ class NetAppExporter(base_driver.ExporterDriver):
         self.backend_name = config['name']
         self.auth = (self.netapp_username, self.netapp_password)
         self.headers = {'Accept': 'application/json', 'Content-Type': 'application/json'}
+        #Hieu_IOPS
+        self.data = {
+            "fixed": {
+                "max_throughput_mbps": 0,
+                "max_throughput_iops": "5000",
+                "capacity_shared": True
+            },
+            "name": "IOPS_5000",
+            "svm": {
+                "uuid": "86a9467e-a0fc-11ec-a7a2-d039ea2812b"
+            }
+        }
+
+        self.data_patch = { "qos_policy": {"name": "test-bb"} }
+
+
 
     #Hieu_IOPS
     def convert_volume_luns(self, volume_id):
@@ -42,6 +60,53 @@ class NetAppExporter(base_driver.ExporterDriver):
                                 verify=False).json()
         lun_id = response_lun_id['records'][0]['uuid']
         return lun_id
+    
+    def check_existing_iops_group(self, iops_limit):   # required iops_limit = "IOPS_3000" but iops_limit = 3000
+        response_check_iops_group = requests.get('https://' + self.netapp_api_ip + '/api/storage/volumes?return_schema=POST&svm.name=FAS8300-PV01-SVM&fields=qos&aggregates.uuid=97d9281e-859f-4fb9-b4f0-80745f2b6cad',
+                                headers=self.headers, auth=self.auth,
+                                verify=False).json()
+        
+        iops_qos_group = response_check_iops_group['record_schema']['qos']['policy']['name']['choices']     # a list containing iops_qos_group
+
+        iops_limit_str = "IOPS_" + str(iops_limit)     # iops_limit = int 4000 => iops_limit_str = str IOPS_4000
+
+        for options in iops_qos_group:
+            if options['choice'] == iops_limit_str:
+                logging.info('Found existing iops limit qos group !!! Reusing iops limit ' + iops_limit_str + ' ...')
+                return iops_limit_str
+        
+        logging.info('Unable to find existing iops limit qos group @@@ Creating new iops limit called ' + iops_limit_str + ' ...')
+
+        # change default iops_limit value and name
+        self.data['fixed']['max_throughput_iops'] = str(iops_limit)
+        self.data['name'] = iops_limit_str
+
+        resp_create_new_iops_limit = requests.post('https://' + self.netapp_api_ip + '/api/storage/qos/policies?return_records=true',
+                                json=self.data, headers=self.headers, auth=self.auth,
+                                verify=False)  # Add json parameter for HTTP POST
+
+        return iops_limit_str
+    
+    def patch_iops_qos_group(self, lun_id, iops_limit_str):
+        self.data_patch['qos_policy']['name'] = iops_limit_str
+
+        resp_patch_iops_qos_group = requests.patch('https://' + self.netapp_api_ip + '/api/storage/luns/' + lun_id,
+                                json=self.data_patch, headers=self.headers, auth=self.auth,
+                                verify=False)  # Add json parameter for HTTP POST
+        
+
+        return  resp_patch_iops_qos_group.json()
+
+    def get_lun_iops_qos(self, volume_id):
+        response_qos = requests.get('https://' + self.netapp_api_ip + '/api/storage/luns?return_timeout=120&max_records=40&fields=svm%2Clocation%2Cos_type%2Cspace%2Cstatus%2Cserial_number%2Ccomment%2Cqos_policy%2Cmetric&status.container_state=online&query=*volume-' + volume_id + '*&query_fields=location.logical_unit%2Csvm.name%2Clocation.volume',
+                                headers=self.headers, auth=self.auth,
+                                verify=False).json()
+        
+        iops_qos_group = response_qos['records'][0]['qos_policy']['name']
+        # FUTURE: Convert iops_qos_group string ("IOPS_4000") to int         
+        return iops_qos_group
+
+    #End Hieu_IOPS   
 
     def get_cluster_metrics(self):
         #Hieu 
@@ -200,12 +265,12 @@ class NetAppExporter(base_driver.ExporterDriver):
 
     def run(self):
         while True:
-            data = {}
-            data['cluster'] = self.get_cluster_metrics()
-            data['node'] = self.get_node_info()
-            data['pool'] = self.get_pool_info()
-            data['disk'] = self.get_disk_info()
-            cache_data(self.cache_file, data)
+            # data = {}
+            # data['cluster'] = self.get_cluster_metrics()
+            # data['node'] = self.get_node_info()
+            # data['pool'] = self.get_pool_info()
+            # data['disk'] = self.get_disk_info()
+            # cache_data(self.cache_file, data)
             sleep(self.interval)
 
 

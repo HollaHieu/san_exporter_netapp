@@ -36,6 +36,8 @@ CONFIG_FILE = "../config.yml"
 LOG_FILE = '/var/log/san_exporter.log'
 config = {}
 running_backends = {}
+volume_types_config = {}
+dc_sites = {}
 
 
 def load_config():
@@ -73,8 +75,11 @@ def config_logging(log_file):
 
 # Entry point of app
 def create_app():
+    global volume_types_config
     global config
     global running_backends
+    global dc_sites
+
     config = load_config()
     if config.get('log_file'):
         log_file = config['log_file']
@@ -93,6 +98,26 @@ def create_app():
     for b in config['backends']:
         if b['name'] in enabled_backends:
             enabled_drivers.append(b['driver'])
+
+            #Hieu: parse OPS_volume_types yaml config here
+            temp_vol_type = b.get('OPS_volume_types')
+            if temp_vol_type:
+                # TODO NOW: Add checks to make sure temp_vol_type is of type list. otherwise exit immediately
+                if isinstance(temp_vol_type, list):
+                    volume_types_config[b['name']] = temp_vol_type
+                    logging.info('There exists OpenStack volume types with backend ' + b['name'] + ' in config file /root/san_exporter_config_folder/Netapp_IOPS/config.yml')
+
+                    # Fill up dc_sites with config $site in yaml config
+                    dc_sites[b['name']] = b['site']
+
+                else:
+                    logging.warning('Wrong OPS_volume_types in yaml config files. Please fix so that OPS_volume_types is a list in YAML!')
+                    exit(0)
+
+            else:
+                logging.info('No OpenStack volume types found with backend ' + b['name'] + ' in config file /root/san_exporter_config_folder/Netapp_IOPS/config.yml')
+
+
     # drivers = {'hpe3par': main_module}
     drivers = load_driver.load_drivers(enabled_drivers)
     running_backends = {}
@@ -153,9 +178,18 @@ def do_get(backend_name):
 #Hieu: Limit IOPS 
 @app.route('/limit_iops/<backend_name>', methods=['POST'])
 def set_limit_iops(backend_name):
+    global volume_types_config
+    global config
+    global running_backends
+    global dc_sites
+
     request_data = request.get_json()
+    # ATM HTTP request param 
     volume_id = None
     iops_limit = None
+    volume_type = None
+    location = None
+
     lun_id = None
 
     # TODO: Xac dinh netapp_backend dua vao volume_type va location => Can co mapping netapp_backend (va Netapp hoac Ceph) <=> volume_type va location (Dua vao file config)
@@ -178,34 +212,112 @@ def set_limit_iops(backend_name):
             logging.error(message)
             return "<p>Set IOPS limit failed! No iops_limit found...</p>"
         
-        # netapp_backend param
-        if 'netapp_backend' in request_data:
-            netapp_backend = request_data['netapp_backend']
+        # volume_type param
+        if 'volume_type' in request_data:
+            volume_type = request_data['volume_type']
         else:
-            message = "Set IOPS limit failed! No netapp_backend found..."
+            message = "Set IOPS limit failed! No volume_type found..."
             logging.error(message)
-            return "<p>Set IOPS limit failed! No netapp_backend found...</p>"        
+            return "<p>Set IOPS limit failed! No volume_type found...</p>" 
+
+        # location param
+        if 'location' in request_data:
+            location = request_data['location']
+        else:
+            message = "Set IOPS limit failed! No location found..."
+            logging.error(message)
+            return "<p>Set IOPS limit failed! No location found...</p>"        
     
     else:
-        return "<p>Set IOPS limit failed! POST data ('netapp_backend' or 'volume_id' or 'iops_limit') not found...</p>"
+        return "<p>Set IOPS limit failed! POST data ('volume_id' or 'iops_limit' or 'volume_type' or 'location') not found...</p>"
 
 
-    # Get LUN_id (uuid) from volume_id in SAN Netapp 
+    # Convert volume_type to netapp_backend
+    for san_backend in volume_types_config:
+        if volume_type in volume_types_config[san_backend]:
+            netapp_backend = san_backend
+
     if netapp_backend in config['enabled_backends']:
+
+        # Get LUN_id (uuid) from volume_id in SAN Netapp 
         lun_id = running_backends[netapp_backend][0].convert_volume_luns(volume_id)
         message = "lun_id = " + lun_id
         logging.info(message)
+
+        # Create a new qos_policy group for limiting IOPS in SAN Netapp (if not existing one already) 
+        iops_limit_str = running_backends[netapp_backend][0].check_existing_iops_group(iops_limit)
+
     else:
         message = "Error!!! Modifying a disabled netapp_backend ..."
         logging.error(message)
-
-    # Create a new qos_policy group for limiting IOPS in SAN Netapp (if not existing one already) 
+        return "<p>Error!!! Modifying a disabled netapp_backend ...</p>"
     
+    # Assign location variable from ATM (for future code extension - not doing anything as of 19/03/2024 update)
+    current_backend_location = dc_sites[netapp_backend]
+    if location != current_backend_location:
+        logging.warning('WARNING: ATM request location is different from current backend location from YAML config $site ...')
+        return "<p>Wrong ATM request location. Ignoring POST request ...</p>"
 
-    # Proxy request from ATM and send HTTP Patch method to SAN
+    # Add HTTP Patch method to perform IOPS limit
+    ret = running_backends[netapp_backend][0].patch_iops_qos_group(lun_id, iops_limit_str)
 
+    return ret
 
-    return 'JSON Object Example'
+@app.route('/limit_iops/get', methods=['GET'])
+def get_limit_iops():
+    global volume_types_config
+    global config
+    global running_backends
+    global dc_sites
+
+    request_data = request.get_json()
+
+    if request_data:
+        # volume_id param
+        if 'volume_id' in request_data:
+            volume_id = request_data['volume_id']
+        else:
+            message = "Set IOPS limit failed! No volume_id found..."
+            logging.error(message)
+            return "<p>Set IOPS limit failed! No volume_id found...</p>"
+        
+        # volume_type param
+        if 'volume_type' in request_data:
+            volume_type = request_data['volume_type']
+        else:
+            message = "Set IOPS limit failed! No volume_type found..."
+            logging.error(message)
+            return "<p>Set IOPS limit failed! No volume_type found...</p>" 
+
+        # location param
+        if 'location' in request_data:
+            location = request_data['location']
+        else:
+            message = "Set IOPS limit failed! No location found..."
+            logging.error(message)
+            return "<p>Set IOPS limit failed! No location found...</p>"        
+    else:
+        return "<p>GET IOPS info failed! Get data ('volume_id' or 'volume_type' or 'location') not found...</p>"
+
+    # Convert volume_type to netapp_backend
+    for san_backend in volume_types_config:
+        if volume_type in volume_types_config[san_backend]:
+            netapp_backend = san_backend
+
+    #Assign location variable from ATM
+    current_backend_location = dc_sites[netapp_backend]
+    if location != current_backend_location:
+        logging.warning('WARNING: ATM request location is different from current backend location from YAML config $site ...')
+        return "<p>Wrong ATM request location. Ignoring POST request ...</p>"
+
+    if netapp_backend in config['enabled_backends']:
+        ret = running_backends[netapp_backend][0].get_lun_iops_qos(volume_id)      
+    else:
+        message = "Error!!! Modifying a disabled netapp_backend ..."
+        logging.error(message)
+        return "<p>Error!!! Modifying a disabled netapp_backend ...</p>"
+
+    return ret
 
 if __name__ == '__main__':
     app = create_app()
