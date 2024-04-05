@@ -176,8 +176,8 @@ def do_get(backend_name):
                                enabled_backends=config['enabled_backends'])
 
 #Hieu: Limit IOPS 
-@app.route('/limit_iops/<backend_name>', methods=['POST'])
-def set_limit_iops(backend_name):
+@app.route('/limit_iops/post', methods=['POST'])
+def set_limit_iops():
     global volume_types_config
     global config
     global running_backends
