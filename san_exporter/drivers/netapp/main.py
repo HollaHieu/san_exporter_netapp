@@ -22,7 +22,7 @@ import requests
 from san_exporter.drivers import base_driver
 from san_exporter.drivers.netapp import prometheus_metrics
 from san_exporter.utils.utils import cache_data
-
+import logging
 
 class NetAppExporter(base_driver.ExporterDriver):
     def __init__(self, config=None, interval=10):
@@ -42,25 +42,47 @@ class NetAppExporter(base_driver.ExporterDriver):
         # aggr_sas = False
         # aggr_ssd = False
 
-        response_storage_cluster = requests.get('https://' + self.netapp_api_ip + '/api/storage/cluster?fields=block_storage',
+        try:
+            response_storage_cluster = requests.get('https://' + self.netapp_api_ip + '/api/storage/cluster?fields=block_storage',
                                 headers=self.headers, auth=self.auth,
                                 verify=False).json()
+        except requests.exceptions.RequestException as e:
+            logging.error("get_cluster_metrics() failed because response_storage_cluster request error: " + e)
+            raise
 
-        response_cpu_utilization = requests.get('https://' + self.netapp_api_ip + '/api/cluster/nodes?fields=name%2Cmodel%2Cha%2Cserial_number%2Cstate%2Cmanagement_interfaces%2Cuptime%2Cservice_processor%2Cvendor_serial_number%2Csystem_machine_type%2Csystem_id%2Cversion%2Cmembership%2Cis_all_flash_optimized%2Cstatistics%2Cmetric',
+        try:
+            response_cpu_utilization = requests.get('https://' + self.netapp_api_ip + '/api/cluster/nodes?fields=name%2Cmodel%2Cha%2Cserial_number%2Cstate%2Cmanagement_interfaces%2Cuptime%2Cservice_processor%2Cvendor_serial_number%2Csystem_machine_type%2Csystem_id%2Cversion%2Cmembership%2Cis_all_flash_optimized%2Cstatistics%2Cmetric',
                                 headers=self.headers, auth=self.auth,
                                 verify=False).json()
+        except requests.exceptions.RequestException as e:
+            logging.error("get_cluster_metrics() failed because response_cpu_utilization request error: " + e)
+            raise
 
-        response_lun = requests.get('https://' + self.netapp_api_ip + '/api/storage/luns?return_records=false&status.container_state=online',
+        try:
+            response_lun = requests.get('https://' + self.netapp_api_ip + '/api/storage/luns?return_records=false&status.container_state=online',
                                 headers=self.headers, auth=self.auth,
                                 verify=False).json()
+        except requests.exceptions.RequestException as e:
+            logging.error("get_cluster_metrics() failed because response_lun request error: " + e)
+            raise
 
-        response_tier_aggregate = requests.get('https://' + self.netapp_api_ip + '/api/storage/aggregates?fields=space%2Cmetric%2Cblock_storage.primary%2Cblock_storage.hybrid_cache',
+        try:
+            response_tier_aggregate = requests.get('https://' + self.netapp_api_ip + '/api/storage/aggregates?fields=space%2Cmetric%2Cblock_storage.primary%2Cblock_storage.hybrid_cache',
                                 headers=self.headers, auth=self.auth,
                                 verify=False).json()
+        except requests.exceptions.RequestException as e:
+            logging.error("get_cluster_metrics() failed because response_tier_aggregate request error: " + e)
+            raise
+
         #Hieu
         cluster_data = []
-        response = requests.get('https://' + self.netapp_api_ip + '/api/cluster', headers=self.headers, auth=self.auth,
+
+        try:
+            response = requests.get('https://' + self.netapp_api_ip + '/api/cluster', headers=self.headers, auth=self.auth,
                                 verify=False).json()
+        except requests.exceptions.RequestException as e:
+            logging.error("get_cluster_metrics() failed because response request error: " + e)
+            raise
 
         cluster_metric = {'name': response['name'], 'version': response['version']['full'],
                           'read_iops': response['metric']['iops']['read'],
@@ -140,9 +162,15 @@ class NetAppExporter(base_driver.ExporterDriver):
 
     def get_node_info(self):
         node_data = []
-        response = requests.get(
-            'https://' + self.netapp_api_ip + '/api/cluster/nodes?fields=name,serial_number,state,model,version',
-            headers=self.headers, auth=self.auth, verify=False).json()
+        
+        try:
+            response = requests.get(
+                        'https://' + self.netapp_api_ip + '/api/cluster/nodes?fields=name,serial_number,state,model,version',
+                        headers=self.headers, auth=self.auth, verify=False).json()
+        except requests.exceptions.RequestException as e:
+            logging.error("get_node_info() failed because response request error: " + e)
+            raise     
+
         for t in response['records']:
             if t['state'] == 'up':
                 data = {'name': t['name'], 'state': t['state'], 'model': t['model'], 'serial_number': t['serial_number'],
@@ -158,13 +186,20 @@ class NetAppExporter(base_driver.ExporterDriver):
 
     def get_pool_info(self):
         pool_data = []
-        response = pool_info = requests.get(
-            'https://' + self.netapp_api_ip + "/api/storage/volumes?fields=metric,state,space", headers=self.headers,
-            auth=self.auth, verify=False).json()
+
+        try:
+            response = pool_info = requests.get(
+                                    'https://' + self.netapp_api_ip + "/api/storage/volumes?fields=metric,state,space", headers=self.headers,
+                                    auth=self.auth, verify=False).json()
+        except requests.exceptions.RequestException as e:
+            logging.error("get_pool_info() failed because response request error: " + e)
+            raise
+
         for t in response['records']:
             # if t['name'].startswith('agg'):
             # Hieu
-            data = {'name': t['name'], 'size_total': t['space']['size'], 'size_used': t['space']['used'], 'size_free': t['space']['available'],
+            try:
+                data = {'name': t['name'], 'size_total': t['space']['size'], 'size_used': t['space']['used'], 'size_free': t['space']['available'],
                         'read_iops': t['metric']['iops']['read'], 'write_iops': t['metric']['iops']['write'],
                         'other_iops': t['metric']['iops']['other'], 'read_latency': t['metric']['latency']['read'],
                         'write_latency': t['metric']['latency']['write'],
@@ -172,15 +207,26 @@ class NetAppExporter(base_driver.ExporterDriver):
                         'read_throughput': t['metric']['throughput']['read'],
                         'write_throughput': t['metric']['throughput']['write'],
                         'other_throughput': t['metric']['throughput']['other'], 'status': t['metric']['status']}
+            except KeyError as e:
+                logging.info("get_pool_info() failed to get key " + str(e) + " in data dict !!!")
+                continue
+                # raise KeyError("KeyError found: get_pool_info() failed")
+
             data.update({'san_ip': self.netapp_api_ip})
             pool_data.append(data)
         return pool_data
 
     def get_disk_info(self):
         disk_data = []
-        response = requests.get(
-            'https://' + self.netapp_api_ip + '/api/storage/disks?fields=name,state,model,serial_number',
-            headers=self.headers, auth=self.auth, verify=False).json()
+
+        try:
+            response = requests.get(
+                        'https://' + self.netapp_api_ip + '/api/storage/disks?fields=name,state,model,serial_number',
+                        headers=self.headers, auth=self.auth, verify=False).json()
+        except requests.exceptions.RequestException as e:
+            logging.error("get_disk_info() failed because response request error: " + e)
+            raise            
+
         for t in response['records']:
             if 'state' in t:
                 data = {'name': t['name'], 'state': t['state'], 'model': t['model'], 'serial_number': t['serial_number']}
@@ -193,10 +239,23 @@ class NetAppExporter(base_driver.ExporterDriver):
     def run(self):
         while True:
             data = {}
+
             data['cluster'] = self.get_cluster_metrics()
+            # if self.backend_name == "FAS3220_HL01_netapp":
+            #     logging.info("cluster done!")
+
             data['node'] = self.get_node_info()
+            # if self.backend_name == "FAS3220_HL01_netapp":
+            #     logging.info("node done!")
+
             data['pool'] = self.get_pool_info()
+            # if self.backend_name == "FAS3220_HL01_netapp":
+            #     logging.info("pool done!")
+
             data['disk'] = self.get_disk_info()
+            # if self.backend_name == "FAS3220_HL01_netapp":
+            #     logging.info("disk done!")
+
             cache_data(self.cache_file, data)
             sleep(self.interval)
 
