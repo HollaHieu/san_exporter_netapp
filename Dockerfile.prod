@@ -2,8 +2,8 @@ FROM centos/python-38-centos7 as builder
 
 WORKDIR /usr/src/app
 
-# RUN yum update -y && \
-#     yum install -y gcc
+RUN yum update -y && \
+    yum install -y gcc
 
 RUN pip install --upgrade pip
 RUN pip install flake8==6.0.0
