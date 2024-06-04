@@ -2,6 +2,8 @@ FROM centos/python-38-centos7 as builder
 
 WORKDIR /usr/src/app
 
+USER root
+
 RUN yum update -y && \
     yum install -y gcc
 
