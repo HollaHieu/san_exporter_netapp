@@ -2,7 +2,7 @@ FROM centos/python-38-centos7 as builder
 
 WORKDIR /usr/src/app
 
-RUN yum update && \
+RUN yum update -y && \
     yum install -y gcc
 
 RUN pip install --upgrade pip
