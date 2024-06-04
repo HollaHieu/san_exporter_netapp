@@ -8,6 +8,7 @@ services:
       - 1337:80
     depends_on:
       - web
+    tty: true
 
   web:
     container_name: gunicorn_limit_iops
@@ -19,4 +20,5 @@ services:
       - 5000
     volumes:
       - /root/san_exporter_config_folder/OpenStack_SAN_conf/config.yml:/san-exporter/config.yml
+    tty: true
       
