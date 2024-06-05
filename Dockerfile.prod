@@ -8,7 +8,7 @@ USER root
 # RUN yum update -y && \
 #     yum install -y gcc
 
-RUN pip install --upgrade pip
+RUN pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host=files.pythonhosted.org --upgrade pip
 # RUN pip install flake8==6.0.0
 COPY . /usr/src/app
 # RUN flake8 --ignore=E501,F401 .
@@ -32,7 +32,7 @@ WORKDIR /san-exporter
 
 COPY --from=builder /usr/src/app/wheels /wheels
 
-RUN pip install --upgrade pip
+RUN pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host=files.pythonhosted.org --upgrade pip
 
 RUN pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host=files.pythonhosted.org --no-cache /wheels/*
 
