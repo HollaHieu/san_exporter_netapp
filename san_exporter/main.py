@@ -133,7 +133,7 @@ def create_app():
             running_backends[backend_config['name']] = rb
             # running_backends = {'3par1111': (HPE3ParExporter,
             # HPE3ParMetrics), ...}
-    # return app
+    return app
 
 
 @app.route('/')
