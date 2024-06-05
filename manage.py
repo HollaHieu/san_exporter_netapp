@@ -32,7 +32,7 @@ if config.get('host'):
 else:
     host = HOST
 app = main.create_app()
-app.run(host=host, port=port)
+# app.run(host=host, port=port)
 
 if __name__ == '__main__':
     pass
