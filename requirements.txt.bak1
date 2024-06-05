@@ -1,4 +1,4 @@
-flask>=1.1.1
+flask>=2.3.2
 lxml>=4.6.3
 paramiko>=2.6.0
 pluggy>=0.12.0
