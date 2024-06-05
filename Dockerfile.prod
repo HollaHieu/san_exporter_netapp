@@ -38,6 +38,8 @@ RUN pip install --no-cache /wheels/*
 
 USER root
 
-ENTRYPOINT [ "python" ]
+# ENTRYPOINT [ "python" ]
 
-CMD [ "manage.py" ]
+# CMD [ "manage.py" ]
+
+###### ENTRYPOINT to wait for cache to start up perhaps? ####### 
