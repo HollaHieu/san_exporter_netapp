@@ -34,7 +34,7 @@ COPY --from=builder /usr/src/app/wheels /wheels
 
 RUN pip install --upgrade pip
 
-RUN pip install --no-cache /wheels/*
+RUN pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host=files.pythonhosted.org --no-cache /wheels/*
 
 # RUN pip install -r requirements.txt
 
