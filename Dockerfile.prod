@@ -38,6 +38,8 @@ RUN pip install --no-cache /wheels/*
 
 USER root
 
+RUN yum install -y rh-python38-python-urllib3
+
 # ENTRYPOINT [ "python" ]
 
 # CMD [ "manage.py" ]
