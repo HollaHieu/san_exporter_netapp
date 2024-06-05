@@ -14,7 +14,7 @@
 #    under the License.
 #
 
-from san_exporter import main
+from san_exporter import main, app
 from san_exporter.main import load_config
 
 PORT = 8888
