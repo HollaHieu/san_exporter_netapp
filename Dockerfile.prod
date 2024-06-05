@@ -1,4 +1,5 @@
-FROM centos/python-38-centos7 as builder
+# FROM centos/python-38-centos7 as builder
+FROM centos/python-36-centos7 as builder
 
 WORKDIR /usr/src/app
 
@@ -19,7 +20,8 @@ RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/app/wheels -r requir
 # STAGE FINAL#
 ##############
 
-FROM centos/python-38-centos7
+# FROM centos/python-38-centos7
+FROM centos/python-36-centos7
 
 COPY . /san-exporter
 
@@ -37,8 +39,6 @@ RUN pip install --no-cache /wheels/*
 # RUN pip install -r requirements.txt
 
 USER root
-
-RUN yum install -y rh-python38-python-urllib3
 
 # ENTRYPOINT [ "python" ]
 
