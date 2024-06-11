@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   nginx:
-    image: 172.16.243.31:15000/san-exporter-netapp-nginx:0.1.0
+    image: 172.16.242.4:15000/san-exporter-netapp-nginx:0.1.0
     container_name: nginx_limit_iops
     build: ./nginx
     ports:
@@ -12,7 +12,7 @@ services:
     tty: true
 
   web:
-    image: 172.16.243.31:15000/san-exporter-netapp-web:0.1.0
+    image: 172.16.242.4:15000/san-exporter-netapp-web:0.1.0
     container_name: gunicorn_limit_iops
     build:
       context: .
